@@ -616,7 +616,7 @@ function fcnSendNewPlayerConf(shtConfig, PlayerData){
                 '<br><br>Finalement, tu peux consulter ton pool de cartes ainsi que celui de tous les autres joueurs de la ligue au lien suivant '+
                   '(je vous enverrai une confirmation lorsque les pool de cartes seront complétés):'+
                     '<br><br>'+CardPoolUrl+
-                      '<br><br>Si tu as des questions ou commentaires, svp n’hésite pas à me contacter, il me fera plaisir de te répondre dans les plus brefs délais.'+
+                      '<br><br>Si tu as des questions ou commentaires, svp n’hésite pas à m’écrire, il me fera plaisir de te répondre dans les plus brefs délais.'+
                         '<br><br>Merci et bonne chance'+
                           '<br><br>---------------<br><br>Eric Bouchard<br>Turn 1 Gaming Leagues and Tournament Applications';
     

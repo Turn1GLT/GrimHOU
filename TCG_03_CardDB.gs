@@ -104,7 +104,7 @@ function fcnUpdateCardDB(shtConfig, Player, CardList, PackData, shtTest){
   }
 
   // Debug
-  //shtTest.getRange(1,1,16,4).setValues(PackData);
+  //shtTest.getRange(1,20,16,4).setValues(PackData);
   
   // Call function to generate clean card pool from Player Card DB
   fcnUpdateCardPool(shtConfig, shtCardDB, Player, shtTest);

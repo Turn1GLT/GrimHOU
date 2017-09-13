@@ -1,12 +1,12 @@
 // **********************************************
-// function fcnSubmitTCG_Master()
+// function fcnSubmitTCG_GrimHOU()
 //
 // This function analyzes the form submitted
 // and executes the appropriate functions
 //
 // **********************************************
 
-function fcnSubmitTCG_Master(e) {
+function fcnSubmitTCG_GrimHOU(e) {
   
   var ss = SpreadsheetApp.getActiveSpreadsheet();
    
@@ -27,21 +27,21 @@ function fcnSubmitTCG_Master(e) {
   
   // If Form Submitted is a Player Subscription
   if(ShtName == 'Registration EN' || ShtName == 'Registration FR'){
-    fcnRegistrationTCG(ss, shtResponse, RowResponse);
+    //fcnRegistrationTCG(ss, shtResponse, RowResponse);
   }
-}  
+} 
 
 
 // **********************************************
-// function fcnProcessMatchTCG_Master()
+// function fcnProcessMatchTCG_()
 //
-// This function populates the Game Results tab 
-// once a player submitted his Form
+// This function analyzes the form submitted
+// and executes the appropriate functions
 //
 // **********************************************
 
 function fcnProcessMatchTCG() {
-    
+  
   // Opens Spreadsheet
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   
@@ -593,8 +593,8 @@ function fcnGameResultsTCG(ss, shtConfig, ConfigData, shtRspn) {
       
       // Updates the Status while processing
       if(Status[0] >= 0){
-        Status[0] = 10; // Status Number
-        Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]); // Status Message
+        Status[0] = 10; 
+        Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
         Status[2] = MatchData[3][0]; // Week Processed
       }
       // Updating Match Process Data

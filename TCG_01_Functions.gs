@@ -278,7 +278,7 @@ function fcnPostMatchResultsTCG(ss, ConfigData, shtRspn, ResponseData, MatchingR
     MatchPostedStatus = 1;
     
     // Post Results in Appropriate Week Number for Both Players
-    fcnPostResultWeekTCG(ss, ConfigData, ResultData, shtTest);
+    fcnPostResultWeek(ss, ConfigData, ResultData, shtTest);
   }
   
   // If Match Validation was not successful, generate Error Status
@@ -334,7 +334,7 @@ function fcnPostMatchResultsTCG(ss, ConfigData, shtRspn, ResponseData, MatchingR
 //
 // **********************************************
 
-function fcnPostResultWeekTCG(ss, ConfigData, ResultData, shtTest) {
+function fcnPostResultWeek(ss, ConfigData, ResultData, shtTest) {
 
   // Code Execution Options
   var OptTCGBooster = ConfigData[3][0];
@@ -342,7 +342,7 @@ function fcnPostResultWeekTCG(ss, ConfigData, ResultData, shtTest) {
   var ColPackWeekRslt = ConfigData[23][0];
   var ColPlyr = 2;
   var ColWin = 5;
-  var ColLos = 6;  
+  var ColLos = 6;
   
   // function variables
   var shtWeekRslt;
@@ -351,10 +351,10 @@ function fcnPostResultWeekTCG(ss, ConfigData, ResultData, shtTest) {
   var shtWeekWinrRec;
   var shtWeekWinrLoc
   var shtWeekLosrRec;
-  var shtWeekLosrLoc;
-  var shtWeekPackData;
+  var shtWeekLosrLoc
+  var shtWeekPackData
   var shtWeekMaxCol;
-  var shtWeekPlyr;
+  var shtWeekPlyr
   
   var PackLength = 16;
   var NextPackID = 0;
@@ -376,7 +376,7 @@ function fcnPostResultWeekTCG(ss, ConfigData, ResultData, shtTest) {
     var Round = 'Round'+MatchWeek;
     shtWeekRslt = ss.getSheetByName(Round);
   }
-  
+
   shtWeekMaxCol = shtWeekRslt.getMaxColumns();
 
   // Gets All Players Names
@@ -607,7 +607,6 @@ function fcnCopyStandingsResults(ss, shtConfig, RspnWeekNum, AllSheets){
   }
 }
 
-
 // **********************************************
 // function fcnAnalyzeLossPenalty()
 //
@@ -657,6 +656,7 @@ function fcnAnalyzeLossPenalty(ss, Week, PlayerData){
   }
   return PlayerData;
 }
+
 
 // **********************************************
 // function fcnModifyWeekMatchReport()
