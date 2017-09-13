@@ -1,16 +1,49 @@
 // **********************************************
-// function fcnMain()
+// function fcnSubmitTCG_Master()
+//
+// This function analyzes the form submitted
+// and executes the appropriate functions
+//
+// **********************************************
+
+function fcnSubmitTCG_Master(e) {
+  
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+   
+  // Get Row from New Response
+  var rngResponse = e.range;
+  var RowResponse = e.range.getRow();
+  Logger.log('Response Row: %s',RowResponse);
+  
+  // Get Sheet from New Response
+  var shtResponse = SpreadsheetApp.getActiveSheet();
+  var ShtName = shtResponse.getSheetName();
+  Logger.log('Sheet: %s',ShtName);
+  
+  // If Form Submitted is a Match Report, process results
+  if(ShtName == 'Responses EN' || ShtName == 'Responses FR') {
+    fcnProcessMatchTCG();
+  }
+  
+  // If Form Submitted is a Player Subscription
+  if(ShtName == 'Registration EN' || ShtName == 'Registration FR'){
+    fcnRegistrationTCG(ss, shtResponse, RowResponse);
+  }
+}  
+
+
+// **********************************************
+// function fcnProcessMatchTCG_Master()
 //
 // This function populates the Game Results tab 
 // once a player submitted his Form
 //
 // **********************************************
 
-function fcnMainWG_Grim40K() {
-  
+function fcnProcessMatchTCG() {
+    
   // Opens Spreadsheet
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var shtTest = ss.getSheetByName('Test');
   
   // Config Sheet to get options
   var shtConfig = ss.getSheetByName('Config');
@@ -26,7 +59,7 @@ function fcnMainWG_Grim40K() {
 
   // Get Number of Players and Players Email
   var shtPlayers = ss.getSheetByName('Players');
-  var NbPlayers = shtPlayers.getRange('F2').getValue();
+  var NbPlayers = shtPlayers.getRange(2,6).getValue();
   var PlayersEmail = shtPlayers.getRange(3,3,NbPlayers,1).getValues();
   
   // Open Responses sheets
@@ -46,7 +79,7 @@ function fcnMainWG_Grim40K() {
   var RspnRow;
   
   // Data Processing Flags
-  var Status = new Array(2); // Status[0] = Status Value, Status[1] = Status Message
+  var Status = new Array(3); // Status[0] = Status Value, Status[1] = Status Message, Status[2] = Week Processed
   
   // Function Polled Values
   var RspnNextRow = shtRspn.getRange(1, ColNextEmptyRow).getValue();
@@ -54,11 +87,11 @@ function fcnMainWG_Grim40K() {
   var RspnNextRowEN = shtRspnEN.getRange(1, ColNextEmptyRow).getValue();
   var RspnNextRowFR = shtRspnFR.getRange(1, ColNextEmptyRow).getValue();
     
-  EntriesProcessing = shtRspn.getRange(1, ColNbUnprcsdEntries).getValue();
-  Logger.log('Nb of Entries Before Copying: %s',EntriesProcessing)
-  
   // Execute if Trigger is Enabled
   if(cfgTrigReport == 'Enabled'){
+    EntriesProcessing = shtRspn.getRange(1, ColNbUnprcsdEntries).getValue();
+    Logger.log('Nb of Entries Before Copying: %s',EntriesProcessing)
+    
     // Look for Unprocessed Data in Responses EN
     for (RspnRow = RspnNextRowEN; RspnRow <= RspnMaxRowsEN; RspnRow++){
       
@@ -66,7 +99,7 @@ function fcnMainWG_Grim40K() {
       ResponseData = shtRspnEN.getRange(RspnRow, 1, 1, RspnDataInputs).getValues();
       TimeStamp = ResponseData[0][0];
       Email = ResponseData[0][1];
-      DataCopied = ResponseData[0][9];
+      DataCopied = ResponseData[0][25];
       
       // Look if Email is valid (Email is associated to one player)
       Logger.log('Email to find EN: %s', Email);
@@ -75,13 +108,13 @@ function fcnMainWG_Grim40K() {
           EmailValid = 1; 
           i = NbPlayers}
       }
-      Logger.log('EmailValid EN: %s',EmailValid);
+        Logger.log('EmailValid EN: %s',EmailValid);
       
       // Check if DataCopied Field is null and Email is Valid, we found new data to copy
       if (DataCopied == '' && EmailValid == 1){
         DataCopied = 1;
         shtRspnEN.getRange(RspnRow, ColDataCopied).setValue(DataCopied);
-        shtRspnEN.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-14]",FALSE)<>"",1,"")');
+        shtRspnEN.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-30]",FALSE)<>"",1,"")');
       }
       // If TimeStamp is null, Delete Row and start over
       if (TimeStamp == '' && RspnRow < RspnMaxRowsEN) {
@@ -92,7 +125,7 @@ function fcnMainWG_Grim40K() {
       if (EmailValid == 0 && Email != ''){
         DataCopied = -1;
         shtRspnEN.getRange(RspnRow, ColDataCopied).setValue(DataCopied);
-        shtRspnEN.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-14]",FALSE)<>"",1,"")');
+        shtRspnEN.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-30]",FALSE)<>"",1,"")');
       }
       // If Data is copied or Email is not Valid or TimeStamp is null, Exit loop Responses EN to process data
       if (DataCopied == 1 || DataCopied == -1 || (TimeStamp == '' && RspnRow >= RspnMaxRowsEN)) {
@@ -108,10 +141,9 @@ function fcnMainWG_Grim40K() {
         
         // Copy the new response data (from Time Stamp to Data Copied Field)
         ResponseData = shtRspnFR.getRange(RspnRow, 1, 1, RspnDataInputs).getValues();
-        shtTest.getRange(RspnRow, 1, 1, RspnDataInputs).setValues(ResponseData);
         TimeStamp = ResponseData[0][0];
         Email = ResponseData[0][1];
-        DataCopied = ResponseData[0][9];
+        DataCopied = ResponseData[0][25];
         
         // Look if Email is valid (Email is associated to one player)
         Logger.log('Email to find FR: %s', Email);
@@ -126,7 +158,7 @@ function fcnMainWG_Grim40K() {
         if (DataCopied == '' && EmailValid == 1){
           DataCopied = 1;
           shtRspnFR.getRange(RspnRow, ColDataCopied).setValue(DataCopied);
-          shtRspnFR.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-14]",FALSE)<>"",1,"")');
+          shtRspnFR.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-30]",FALSE)<>"",1,"")');
         }
         // If TimeStamp is null, Delete Row and start over
         if (TimeStamp == '' && RspnRow < RspnMaxRowsFR) {
@@ -137,7 +169,7 @@ function fcnMainWG_Grim40K() {
         if (EmailValid == 0 && Email != ''){
           DataCopied = -1;
           shtRspnFR.getRange(RspnRow, ColDataCopied).setValue(DataCopied);
-          shtRspnFR.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-14]",FALSE)<>"",1,"")');
+          shtRspnFR.getRange(RspnRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-30]",FALSE)<>"",1,"")');
         }
         // If Data is copied, Exit loop Responses FR to process data
         if (DataCopied == 1 || DataCopied == -1 || (TimeStamp == '' && RspnRow >= RspnMaxRowsFR)) {
@@ -149,16 +181,14 @@ function fcnMainWG_Grim40K() {
     // If Data is copied, put it in Responses Sheet
     if (DataCopied == 1){
       
-      Logger.log('Next Row: %s',RspnNextRow);
-      
       // Copy New Entry Data to Main Responses Sheet
       shtRspn.getRange(RspnNextRow, 1, 1, RspnDataInputs).setValues(ResponseData);
       
       Logger.log('Match Data Copied for Players: %s, %s',ResponseData[0][4],ResponseData[0][5]);
       
       // Copy Formula to detect if an entry is currently processing
-      shtRspn.getRange(RspnNextRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-14]",FALSE)<>"",1,"")');
-      shtRspn.getRange(RspnNextRow, ColNbUnprcsdEntries).setValue('=IF(AND(INDIRECT("R[0]C[-15]",FALSE)<>"",INDIRECT("R[0]C[-4]",FALSE)<>2),1,"")');
+      shtRspn.getRange(RspnNextRow, ColNextEmptyRow).setValue('=IF(INDIRECT("R[0]C[-30]",FALSE)<>"",1,"")');
+      shtRspn.getRange(RspnNextRow, ColNbUnprcsdEntries).setValue('=IF(AND(INDIRECT("R[0]C[-31]",FALSE)<>"",INDIRECT("R[0]C[-4]",FALSE)<>2),1,"")');
       
       // Troubleshoot
       EntriesProcessing = shtRspn.getRange(1, ColNbUnprcsdEntries).getValue();
@@ -168,9 +198,9 @@ function fcnMainWG_Grim40K() {
       if (EntriesProcessing == 1){
         // Execute Game Results Analysis for as long as there are unprocessed entries
         while (EntriesProcessing >= 1) {
-          Status = fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn);
+          Status = fcnGameResultsTCG(ss, shtConfig, ConfigData, shtRspn);
           EntriesProcessing = shtRspn.getRange(1, ColNbUnprcsdEntries).getValue();
-          Logger.log('Nb of Entries Pending After Posting: %s',EntriesProcessing)
+          Logger.log('Nb of Entries Pending After Processing: %s',EntriesProcessing)
         }
       }
       // If the Match was successfully Posted, Update League Standings
@@ -182,22 +212,23 @@ function fcnMainWG_Grim40K() {
         
         Logger.log('Copy to League Spreadsheets');
         // Copy all data to League Spreadsheet
-        fcnCopyStandingsResults(ss, shtConfig);
+        fcnCopyStandingsResults(ss, shtConfig, Status[2], 0);
         Logger.log('------------ Standings Updated ------------');
       }
+      
     }
   }
+  
   // Send Log if necessary
   if (cfgSendLog == 'Enabled' || (EmailValid == 0 && Email != '')){
     if(EmailValid == 0) Logger.log('Submission Email Not Valid : %s',Email)
     // Send Log by email
     var recipient = Session.getActiveUser().getEmail();
-    var subject = 'Wargame Process Log - ' + shtConfig.getRange(11,2).getValue() + ' ' + shtConfig.getRange(13,2).getValue()
+    var subject = 'TCG Process Log - ' + shtConfig.getRange(11,2).getValue() + ' ' + shtConfig.getRange(13,2).getValue()
     var body = Logger.getLog();
     MailApp.sendEmail(recipient, subject, body);  
   }
 }
-
 
 
 // **********************************************
@@ -208,14 +239,14 @@ function fcnMainWG_Grim40K() {
 //
 // **********************************************
 
-function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
+function fcnGameResultsTCG(ss, shtConfig, ConfigData, shtRspn) {
   
   // Data from Configuration File
   // Code Execution Options
   var OptDualSubmission = ConfigData[0][0]; // If Dual Submission is disabled, look for duplicate instead
   var OptPostResult = ConfigData[1][0];
   var OptPlyrMatchValidation = ConfigData[2][0];
-  var OptWargame = ConfigData[4][0];
+  var OptTCGBooster = ConfigData[3][0];
   var OptSendEmail = ConfigData[6][0];
   
   // Columns Values and Parameters
@@ -247,14 +278,25 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
   var RspnDataPrcssd = 0;
   var ResponseData;
   var MatchingRspnData;
+  
+  // Card List Variables
+  var CardList = new Array(16); // 0 = Set Name, 1-14 = Card Numbers, 15 = Card 14 is Masterpiece (Y-N)
+  var CardName;
+  
+  // Create Array of 16x4 where each row is Card 1-14 and each column is Card Info
+  var PackData = new Array(16); // 0 = Set Name, 1-14 = Card Numbers, 15 = Card 14 is Masterpiece (Y-N)
+  for(var cardnum = 0; cardnum < 16; cardnum++){
+    PackData[cardnum] = new Array(4); // 0= Card in Pack, 1= Card Number, 2= Card Name, 3= Card Rarity
+    for (var val = 0; val < 4; val++) PackData[cardnum][val] = '';
+  }
 
   // Match Data Variables
   var MatchID; 
-  var MatchData = new Array(26); // 0 = TimeStamp, 1 = Location, 2 = MatchID, 3 = Week #, 4 = Winning Player, 5 = Losing Player, 6 = Game Tie, 7-23 = Not Used, 24 = MatchPostStatus
+  var MatchData = new Array(26); // 0 = MatchID, 1 = Week #, 2 = Winning Player, 3 = Losing Player, 4 = Score, 5 = Winner Points, 6 = Loser Points, 7 = Card Set, 8-21 = Cards, 22 = Masterpiece (Y-N), 23 = Reserved, 24 = MatchPostStatus
   // Create Array of 26x4 where each row is Card 1-14 and each column is Card Info. This Info is only used for rows 8-21
-  for(var y = 0; y < 26; y++){
-    MatchData[y] = new Array(4); // 0= Item Value, 1= Number of Match Played, 2= Power Bonus, 3= Not Used
-    for (var val = 0; val < 4; val++) MatchData[y][val] = '';
+  for(var cardnum = 0; cardnum < 26; cardnum++){
+    MatchData[cardnum] = new Array(4); // 0= Item Value or Card In Pack, 1= Card Number, 2= Card Name, 3= Card Rarity
+    for (var val = 0; val < 4; val++) MatchData[cardnum][val] = '';
   }
   
   // Email Addresses Array
@@ -269,7 +311,7 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
   EmailAddresses[2][1] = '';
 
   // Data Processing Flags
-  var Status = new Array(2); // Status[0] = Status Value, Status[1] = Status Message
+  var Status = new Array(3); // Status[0] = Status Value, Status[1] = Status Message, Status[2] = Week Processed
   Status[0] = 0;
   
   var DuplicateRspn = -99;
@@ -277,28 +319,22 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
   var MatchPostStatus = -97;
   var CardDBUpdated = -96;
   
-  Logger.log('--------- Posting Match ---------'); 
+  Logger.log('--------- Posting Match ---------');  
   Logger.log('--------- Options ---------');
   Logger.log('Dual Submission Option: %s',OptDualSubmission);
   Logger.log('Post Results Option: %s',OptPostResult);
   Logger.log('Player Match Validation Option: %s',OptPlyrMatchValidation);
-  Logger.log('Wargame Option: %s',OptWargame);
+  Logger.log('TCG Option: %s',OptTCGBooster);
   Logger.log('Send Email Option: %s',OptSendEmail);
   
   // Find a Row that is not processed in the Response Sheet (added data)
   for (var RspnRow = RspnNextRowPrcss; RspnRow <= RspnMaxRows; RspnRow++){
-    
-    // Updates the Status while processing
-    if(Status[0] >= 0){
-      Status[0] = 1;
-      Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
-    }
-    
+       
     // Copy the new response data (from Time Stamp to Data Processed Field
     ResponseData = shtRspn.getRange(RspnRow, 1, 1, RspnDataInputs).getValues();
     
     // Values from Response Data
-    RspnDataPrcssd = ResponseData[0][9];
+    RspnDataPrcssd = ResponseData[0][25];
     RspnPlyrSubmit = ResponseData[0][1]; // Player Submitting
     RspnLocation   = ResponseData[0][2]; // Match Location (Store Yes or No)
     RspnWeekNum    = ResponseData[0][3]; // Week / Round Number
@@ -318,7 +354,7 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
           Status[0] = 1;
           Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
         }
-                
+        
         // Generates the Match ID in advance if data analysis is successful
         MatchID = shtRspn.getRange(1, ColMatchIDLastVal).getValue() + 1;
         
@@ -374,7 +410,7 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
                 Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
               }
               // Execute function to populate Match Result Sheet from processed data
-              MatchData = fcnPostMatchResultsWG(ss, ConfigData, shtRspn, ResponseData, MatchingRspnData, MatchID, MatchData, shtTest);
+              MatchData = fcnPostMatchResultsTCG(ss, ConfigData, shtRspn, ResponseData, MatchingRspnData, MatchID, MatchData, shtTest);
               MatchPostStatus = MatchData[25][0];
               
               Logger.log('Match Post Status: %s',MatchPostStatus);
@@ -384,15 +420,34 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
                 // Match ID doesn't change because we assumed it was already OK
                 Logger.log('Match Posted ID: %s',MatchID);
                 
-                // If Game Type is Wargame, Update available amount of Power Level Available
-                if(OptWargame == 'Enabled'){
-                  // Updates the Status while processing
-                  if(Status[0] >= 0){
-                    Status[0] = 5; 
-                    Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
+                // Copies all cards added to the Card Database
+                if (OptTCGBooster == 'Enabled'){
+                  for (var card = 0; card < NbCards; card++){
+                    CardList[card] = ResponseData[0][card+7];
                   }
-                  // Update Player Army DB and Army List
-                  fcnUpdateArmyDB(shtConfig, RspnDataLosr, MatchData[5][2], shtTest); // MatchData[5][2] = Loser Power Level Bonus
+                  // If Pack was opened, Update Card Database and Card Pool for Appropriate player
+                  if (CardList[0] != 'No Pack Opened') {
+                    
+                    // Updates the Status while processing
+                    if(Status[0] >= 0){
+                      Status[0] = 5; 
+                      Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
+                    }
+                    // Update the Card DB and Card List
+                    PackData = fcnUpdateCardDB(shtConfig, RspnDataLosr, CardList, PackData, shtTest);
+                    // Copy all card names to Match Data [7-22]
+                    for (var card = 0; card < NbCards; card++){
+                      MatchData[card+9][0] = PackData[card][0]; // Card in Pack
+                      MatchData[card+9][1] = PackData[card][1]; // Card Number
+                      MatchData[card+9][2] = PackData[card][2]; // Card Name
+                      MatchData[card+9][3] = PackData[card][3]; // Card Rarity
+                      
+                      if (PackData[card][2] == 'Card Name not Found for Card Number') {
+                        Status = subGenErrorMsg(Status, -60,CardList[card]);
+                        PackData[card][2] = Status[1];
+                      }
+                    }
+                  }
                 }
               }
               
@@ -409,15 +464,22 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
               // Match ID doesn't change because we assumed it was already OK
               
             }
+            // Updates the Status while processing
+            if(Status[0] >= 0){
+              Status[0] = 6; 
+              Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
+            }
             // Set the Data Processed Flag
             RspnDataPrcssd = 1;
           }
           
           // If MatchingEntry = 0, fcnFindMatchingEntry did not find a matching entry, it might be the first response entry
           if (OptDualSubmission == 'Enabled' && MatchingRspn == 0){
-            // Generate the Status Message
-            Status[0] = '';
-            Status[1] = 'Waiting for Other Response Submission';
+            // Updates the Status while processing
+            if(Status[0] >= 0){
+              Status[0] = 0;
+              Status[1] = 'Waiting for Other Response Submission';
+            }
             // Set the Data Processed Flag
             RspnDataPrcssd = 1;
             
@@ -490,9 +552,8 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
       }
       
       // If an Error has been detected that prevented to process the Match Data, send available data and Error Message
-      //if(Status[0] != 1 && Status[1] == 'Processing' && Status[1] != 'Waiting for Other Response Submission') {
-      if(Status[0] < 0 /*&& OptSendEmail == 'Enabled'*/) {
-      
+      if(Status[0] < 0 && OptSendEmail == 'Enabled') {
+     
         // Populates Match Data
         MatchData[0][0] = ResponseData[0][0]; // TimeStamp
         MatchData[0][0] = Utilities.formatDate (MatchData[0][0], Session.getScriptTimeZone(), 'YYYY-MM-dd HH:mm:ss');
@@ -502,7 +563,7 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
         MatchData[3][0] = ResponseData[0][3];  // Week/Round Number
         MatchData[4][0] = ResponseData[0][4];  // Winning Player
         MatchData[5][0] = ResponseData[0][5];  // Losing Player
-        MatchData[6][0] = ResponseData[0][6];  // Game is a Tie
+        MatchData[6][0] = ResponseData[0][6];  // Score
         
         // Get Email addresses from Config File
         EmailAddresses = subGetEmailAddress(ss, EmailAddresses, RspnDataWinr, RspnDataLosr);
@@ -514,7 +575,7 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
       }
       
       // If Player Submitted Feedback, send Feedback to Administrator
-      if (ResponseData[0][7] != '') {
+      if (ResponseData[0][23] != '') {
         if (EmailAddresses[1] == '' && EmailAddresses[2] == '') EmailAddresses = subGetEmailAddress(ss, EmailAddresses, RspnDataWinr, RspnDataLosr);
         fcnSendFeedbackEmail(shtConfig, EmailAddresses, MatchData, ResponseData[0][23]);
       }
@@ -532,14 +593,16 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
       
       // Updates the Status while processing
       if(Status[0] >= 0){
-        Status[0] = 10; 
-        Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]);
+        Status[0] = 10; // Status Number
+        Status[1] = subUpdateStatus(shtRspn, RspnRow, ColStatus, ColStatusMsg, Status[0]); // Status Message
+        Status[2] = MatchData[3][0]; // Week Processed
       }
       // Updating Match Process Data
       shtRspn.getRange(RspnRow, ColPrcsd).setValue(RspnDataPrcssd);
       shtRspn.getRange(RspnRow, ColNbUnprcsdEntries).setValue(0);
-      // If Process Error has been detected, update the Response Process Data
-      if(Status[0] < 0){
+      
+      // If Process Error is detected, update Status Columns in Response Sheet
+      if(Status[0]<0){
         shtRspn.getRange(RspnRow, ColStatus).setValue(Status[0]);
         shtRspn.getRange(RspnRow, ColStatusMsg).setValue(Status[1]);
       }
@@ -554,9 +617,6 @@ function fcnGameResultsWG(ss, shtConfig, ConfigData, shtRspn) {
       RspnRow = RspnMaxRows + 1;
     }
   }
-  
-  Logger.log('------------ Game Posted ------------');
-    
   return Status;
 }
 
